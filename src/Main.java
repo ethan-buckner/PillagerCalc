@@ -9,11 +9,19 @@ public class Main {
 		String[] uInput = inputScan.nextLine().split("\\s+");
 		ArrayList<Card> hand = new ArrayList<>();
 		for (String cardName : uInput) {
+			int modcost = -1;
+			for (int i = 0; i < cardName.length(); i++) {
+				if (cardName.charAt(i) == '(') {
+					modcost = Character.getNumericValue(cardName.charAt(i+1));
+					cardName = cardName.substring(0,i);
+				}
+			}
+			boolean costModified = modcost != -1;
 			switch (cardName) {
-				case "step" -> hand.add(new Card(cardName, 0));
-				case "foxy", "tenwu" -> hand.add(new Card(cardName, 2));
-				case "shark", "potion", "scabbs" -> hand.add(new Card(cardName, 4));
-				case "pillager" -> hand.add(new Card(cardName, 6));
+				case "step", "prep", "coin" -> hand.add(new Card(cardName, costModified ? modcost : 0));
+				case "foxy", "tenwu", "dancer" -> hand.add(new Card(cardName, costModified ? modcost : 2));
+				case "shark", "potion", "scabbs" -> hand.add(new Card(cardName, costModified ? modcost : 4));
+				case "pillager" -> hand.add(new Card(cardName, costModified ? modcost : 6));
 			}
 		}
 		System.out.println("How much mana do you have?");
@@ -27,7 +35,7 @@ public class Main {
 			StateNode root = new StateNode(hand, m, lifeTotal);
 			root.cardsPlayed += extraCards;
 			GameTree tree = new GameTree(root);
-			StateNode lethalNode = tree.treeSearch();
+			StateNode lethalNode = tree.treeSearchID();
 			if (lethalNode != null) {
 				System.out.println("Your combo: ");
 				System.out.println(lethalNode.backtrack());

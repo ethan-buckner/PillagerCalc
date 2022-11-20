@@ -1,12 +1,11 @@
 import java.util.ArrayList;
 
 public class StateNode {
-	final String[] cardNames = {"pillager", "scabbs", "foxy", "shark", "step", "potion", "tenwu"};
-	public boolean lethal;
 	public int mana;
 	public int lifeTotal;
 	public int cardsPlayed;
 	public int nextComboReduction;
+	public int nextSpellReduction;
 	public int nextCardReduction;
 	public int nextNextCardReduction;
 	public ArrayList<Card> hand;
@@ -23,13 +22,13 @@ public class StateNode {
 
 	public StateNode(ArrayList<Card> startHand, int startMana, int startLifeTotal) {  // Root node constructor
 		explored = false;
-		lethal = false;
 		previous = null;
 		played = null;
 		targeted = "untargeted";
 		mana = startMana;
 		cardsPlayed = 0;
 		nextComboReduction = 0;
+		nextSpellReduction = 0;
 		nextCardReduction = 0;
 		nextNextCardReduction = 0;
 		lifeTotal = startLifeTotal;
@@ -39,12 +38,12 @@ public class StateNode {
 
 	public StateNode(StateNode copy) { // Copy constructor
 		explored = copy.explored;
-		lethal = copy.explored;
 		previous = copy.previous;
 		targeted = copy.targeted;
 		mana = copy.mana;
 		cardsPlayed = copy.cardsPlayed;
 		nextComboReduction = copy.nextComboReduction;
+		nextSpellReduction = copy.nextSpellReduction;
 		nextCardReduction = copy.nextCardReduction;
 		nextNextCardReduction = copy.nextNextCardReduction;
 		lifeTotal = copy.lifeTotal;
@@ -68,6 +67,7 @@ public class StateNode {
 		boolean shark = previous.isSharkActive();
 		Card targetedMinion = findTargetedMinion(lastTarget);
 		nextComboReduction = played.isCombo() ? 0 : previous.nextComboReduction;
+		nextSpellReduction = played.isSpell() ? 0 : previous.nextSpellReduction;
 		nextCardReduction = previous.nextNextCardReduction;
 		nextNextCardReduction = 0;
 		switch (played.name) {
@@ -86,6 +86,7 @@ public class StateNode {
 				newCard.cost -= 2;
 				hand.add(newCard);
 			}
+			case "prep" -> nextSpellReduction = 2;
 			case "potion" -> {
 				for (Card minion : battlefield) {
 					if (hand.size() >= 10) break;
@@ -96,8 +97,28 @@ public class StateNode {
 				battlefield.remove(targetedMinion);
 				hand.add(new Card(targetedMinion.name, 1));
 			}
+			case "dancer" -> {
+				if (true) {
+					int reps = shark ? 2 : 1;
+					for (int i = 0; i < reps; i++) {
+						if (hand.size() < 10) {
+							hand.add(new Card("coin", 0));
+						}
+					}
+				}
+				else {
+					if (hand.size() < 10) {
+						mana += 1;
+						cardsPlayed += 1;
+					}
+					if (hand.size() < 9 && shark) {
+						mana += 1;
+						cardsPlayed += 1;
+					}
+				}
+			}
+			case "coin" -> mana += 1;
 		}
-		lethal = lifeTotal <= 0;
 		cardsPlayed = parent.getCardsPlayed() + 1;
 		if (!played.isSpell()) battlefield.add(played);
 	}
@@ -114,7 +135,9 @@ public class StateNode {
 	}
 
 	private boolean canAfford(Card choice) {
-		int modifiedCost = choice.cost - ((choice.isCombo() ? nextComboReduction : 0) + nextCardReduction);
+		int modifiedCost = choice.cost - (
+				(choice.isCombo() ? nextComboReduction : 0) + (choice.isSpell() ? nextSpellReduction : 0) + nextCardReduction
+		);
 		if (modifiedCost < 0) modifiedCost = 0;
 		return (modifiedCost <= mana);
 	}
@@ -125,6 +148,7 @@ public class StateNode {
 			return null;
 		}
 		boolean found = false;
+		String[] cardNames = new String[]{"pillager", "scabbs", "foxy", "shark", "step", "potion", "tenwu", "coin", "dancer", "prep"};
 		for (String s : cardNames) {
 			if (target.equals(s)) {
 				found = true;

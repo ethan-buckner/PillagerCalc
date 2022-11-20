@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 
 public class Card {
-	final String[] cardNames = {"pillager", "scabbs", "foxy", "shark", "step", "potion", "tenwu"};
 	String name;
 	int cost;
 	ArrayList<String> keywords;
@@ -12,7 +11,7 @@ public class Card {
 		name = effect;
 		switch (effect) {
 			case "tenwu" -> keywords.add("targeted");
-			case "potion" -> keywords.add("spell");
+			case "potion", "prep", "coin" -> keywords.add("spell");
 			case "pillager", "scabbs" -> keywords.add("combo");
 			case "step" -> {
 				keywords.add("spell");
@@ -28,8 +27,8 @@ public class Card {
 		switch (name) {
 			case "pillager" -> cost = 6;
 			case "scabbs", "shark", "potion" -> cost = 4;
-			case "foxy", "tenwu" -> cost = 2;
-			case "step" -> cost = 0;
+			case "foxy", "tenwu", "dancer" -> cost = 2;
+			case "step", "coin", "prep" -> cost = 0;
 		}
 	}
 
