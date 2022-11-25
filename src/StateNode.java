@@ -98,22 +98,10 @@ public class StateNode {
 				hand.add(new Card(targetedMinion.name, 1));
 			}
 			case "dancer" -> {
-				if (true) {
-					int reps = shark ? 2 : 1;
-					for (int i = 0; i < reps; i++) {
-						if (hand.size() < 10) {
-							hand.add(new Card("coin", 0));
-						}
-					}
-				}
-				else {
+				int reps = shark ? 2 : 1;
+				for (int i = 0; i < reps; i++) {
 					if (hand.size() < 10) {
-						mana += 1;
-						cardsPlayed += 1;
-					}
-					if (hand.size() < 9 && shark) {
-						mana += 1;
-						cardsPlayed += 1;
+						hand.add(new Card("coin", 0));
 					}
 				}
 			}
@@ -167,6 +155,11 @@ public class StateNode {
 	public ArrayList<StateNode> generateChildren() throws TargetingException {
 		ArrayList<StateNode> childList = new ArrayList<>();
 		for (Card choice : hand) {
+			if (choice.name.equals("coin") && nextSpellReduction == 0 && nextCardReduction == 0) {
+				childList = new ArrayList<>();
+				childList.add(new StateNode(this, choice, "untargeted"));
+				return childList;
+			}
 			if (canAfford(choice)) {
 				if (choice.isSpell() || battlefield.size() < 7) {
 					if (choice.keywords.contains("targeted")) {
